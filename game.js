@@ -15,6 +15,22 @@ const API_URL = 'api.php'; // PHP backend URL
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
 
+// Adjust canvas for mobile
+function adjustCanvasForMobile() {
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+        const maxWidth = Math.min(window.innerWidth - 40, 600);
+        canvas.style.width = maxWidth + 'px';
+        canvas.style.height = maxWidth + 'px';
+    } else {
+        canvas.style.width = '600px';
+        canvas.style.height = '600px';
+    }
+}
+
+window.addEventListener('resize', adjustCanvasForMobile);
+adjustCanvasForMobile();
+
 // Game state
 let snake = [{x: 10, y: 10}];
 let velocityX = 1;
@@ -282,6 +298,11 @@ function closeModal() {
 
 // Sound effects
 function playEatSound() {
+    // Vibrate on mobile
+    if (navigator.vibrate) {
+        navigator.vibrate(50);
+    }
+    
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -300,6 +321,11 @@ function playEatSound() {
 }
 
 function playGameOverSound() {
+    // Vibrate on mobile
+    if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]);
+    }
+    
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -413,6 +439,102 @@ startBtn.addEventListener('click', startGame);
 pauseBtn.addEventListener('click', togglePause);
 clearBtn.addEventListener('click', clearScores);
 
+// Mobile touch controls
+const mobileControls = document.getElementById('mobileControls');
+if (mobileControls) {
+    const dpadButtons = mobileControls.querySelectorAll('.dpad-btn');
+    dpadButtons.forEach(btn => {
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const direction = btn.getAttribute('data-direction');
+            handleDirectionChange(direction);
+        });
+        
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const direction = btn.getAttribute('data-direction');
+            handleDirectionChange(direction);
+        });
+    });
+}
+
+// Swipe detection for mobile
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+canvas.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+}, { passive: true });
+
+canvas.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
+    handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+    if (!gameStarted) return;
+    
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    const minSwipeDistance = 30;
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Horizontal swipe
+        if (Math.abs(deltaX) > minSwipeDistance) {
+            if (deltaX > 0) {
+                handleDirectionChange('right');
+            } else {
+                handleDirectionChange('left');
+            }
+        }
+    } else {
+        // Vertical swipe
+        if (Math.abs(deltaY) > minSwipeDistance) {
+            if (deltaY > 0) {
+                handleDirectionChange('down');
+            } else {
+                handleDirectionChange('up');
+            }
+        }
+    }
+}
+
+function handleDirectionChange(direction) {
+    if (!gameStarted) return;
+    
+    switch(direction) {
+        case 'up':
+            if (velocityY !== 1) {
+                nextVelocityX = 0;
+                nextVelocityY = -1;
+            }
+            break;
+        case 'down':
+            if (velocityY !== -1) {
+                nextVelocityX = 0;
+                nextVelocityY = 1;
+            }
+            break;
+        case 'left':
+            if (velocityX !== 1) {
+                nextVelocityX = -1;
+                nextVelocityY = 0;
+            }
+            break;
+        case 'right':
+            if (velocityX !== -1) {
+                nextVelocityX = 1;
+                nextVelocityY = 0;
+            }
+            break;
+    }
+}
+
+// Keyboard controls
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && gameOverModal.style.display === 'flex') {
         saveScore();
@@ -425,37 +547,25 @@ document.addEventListener('keydown', (e) => {
         case 'ArrowUp':
         case 'w':
         case 'W':
-            if (velocityY !== 1) {
-                nextVelocityX = 0;
-                nextVelocityY = -1;
-            }
+            handleDirectionChange('up');
             e.preventDefault();
             break;
         case 'ArrowDown':
         case 's':
         case 'S':
-            if (velocityY !== -1) {
-                nextVelocityX = 0;
-                nextVelocityY = 1;
-            }
+            handleDirectionChange('down');
             e.preventDefault();
             break;
         case 'ArrowLeft':
         case 'a':
         case 'A':
-            if (velocityX !== 1) {
-                nextVelocityX = -1;
-                nextVelocityY = 0;
-            }
+            handleDirectionChange('left');
             e.preventDefault();
             break;
         case 'ArrowRight':
         case 'd':
         case 'D':
-            if (velocityX !== -1) {
-                nextVelocityX = 1;
-                nextVelocityY = 0;
-            }
+            handleDirectionChange('right');
             e.preventDefault();
             break;
         case ' ':
@@ -464,6 +574,20 @@ document.addEventListener('keydown', (e) => {
             break;
     }
 });
+
+// Prevent zoom on double tap for mobile
+document.addEventListener('touchend', (e) => {
+    const now = new Date().getTime();
+    const timeSince = now - lastTap;
+    
+    if (timeSince < 600 && timeSince > 0) {
+        e.preventDefault();
+    }
+    
+    lastTap = now;
+}, { passive: false });
+
+let lastTap = 0;
 
 // Initialize on page load
 init();

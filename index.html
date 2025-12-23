@@ -2,7 +2,11 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0e27">
     <title>Snake - Klassik O'yin</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -327,10 +331,77 @@
             box-shadow: 0 0 20px var(--neon-pink);
         }
         
+        .mobile-controls {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+        }
+        
+        .dpad {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+        
+        .dpad-middle {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        
+        .dpad-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 2rem;
+            font-weight: 700;
+            border: 3px solid var(--neon-blue);
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--neon-blue);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        
+        .dpad-btn:active {
+            background: var(--neon-blue);
+            color: #0a0e27;
+            box-shadow: 0 0 30px var(--neon-blue);
+            transform: scale(0.95);
+        }
+        
+        .dpad-center {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(57, 255, 20, 0.1);
+            border: 2px solid rgba(57, 255, 20, 0.3);
+        }
+        
         @media (max-width: 768px) {
             h1 {
                 font-size: 2.5rem;
                 letter-spacing: 4px;
+            }
+            
+            .subtitle {
+                font-size: 0.9rem;
+            }
+            
+            #gameCanvas {
+                max-width: 100%;
+                height: auto;
+            }
+            
+            .game-wrapper {
+                padding: 10px;
+                max-width: 100%;
             }
             
             .controls {
@@ -340,6 +411,79 @@
             .btn {
                 width: 100%;
                 max-width: 300px;
+            }
+            
+            .mobile-controls {
+                display: block;
+            }
+            
+            .score-display, .best-score {
+                font-size: 1.3rem;
+                padding: 10px 20px;
+            }
+            
+            .high-scores {
+                margin-top: 20px;
+                padding: 15px;
+            }
+            
+            .high-scores h2 {
+                font-size: 1.5rem;
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .game-wrapper {
+                padding: 5px;
+            }
+            
+            .dpad-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+            
+            .dpad-center {
+                width: 50px;
+                height: 50px;
+            }
+        }
+        
+        /* Landscape mode for mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                align-items: start;
+                max-width: 100%;
+            }
+            
+            h1, .subtitle {
+                grid-column: 1 / -1;
+            }
+            
+            .game-wrapper {
+                grid-column: 1;
+            }
+            
+            .controls, .mobile-controls {
+                grid-column: 2;
+                margin-top: 0;
+            }
+            
+            .high-scores {
+                grid-column: 1 / -1;
             }
         }
     </style>
@@ -362,6 +506,19 @@
             </div>
             <button class="btn" id="startBtn">Boshlash</button>
             <button class="btn pause" id="pauseBtn">Pauza</button>
+        </div>
+        
+        <!-- Mobile touch controls -->
+        <div class="mobile-controls" id="mobileControls">
+            <div class="dpad">
+                <button class="dpad-btn dpad-up" data-direction="up">↑</button>
+                <div class="dpad-middle">
+                    <button class="dpad-btn dpad-left" data-direction="left">←</button>
+                    <div class="dpad-center"></div>
+                    <button class="dpad-btn dpad-right" data-direction="right">→</button>
+                </div>
+                <button class="dpad-btn dpad-down" data-direction="down">↓</button>
+            </div>
         </div>
         
         <div class="high-scores">
