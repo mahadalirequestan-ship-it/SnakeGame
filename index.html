@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake - Klassik O'yin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-green: #39ff14;
+            --neon-pink: #ff10f0;
+            --neon-blue: #00f0ff;
+            --dark-bg: #0a0e27;
+            --grid-color: #1a1f3a;
+            --snake-color: #39ff14;
+            --food-color: #ff10f0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1629 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--neon-green);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(57, 255, 20, 0.03) 2px,
+                    rgba(57, 255, 20, 0.03) 4px
+                );
+            pointer-events: none;
+            animation: scanlines 8s linear infinite;
+        }
+        
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
+        }
+        
+        .container {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            text-shadow: 
+                0 0 10px var(--neon-green),
+                0 0 20px var(--neon-green),
+                0 0 30px var(--neon-green),
+                0 0 40px var(--neon-green);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                text-shadow: 
+                    0 0 10px var(--neon-green),
+                    0 0 20px var(--neon-green),
+                    0 0 30px var(--neon-green);
+            }
+            to {
+                text-shadow: 
+                    0 0 20px var(--neon-green),
+                    0 0 30px var(--neon-green),
+                    0 0 40px var(--neon-green),
+                    0 0 50px var(--neon-green);
+            }
+        }
+        
+        .subtitle {
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.2rem;
+            color: var(--neon-blue);
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+        
+        .game-wrapper {
+            display: inline-block;
+            position: relative;
+            padding: 20px;
+            background: rgba(10, 14, 39, 0.8);
+            border: 3px solid var(--neon-green);
+            border-radius: 15px;
+            box-shadow: 
+                0 0 20px var(--neon-green),
+                inset 0 0 20px rgba(57, 255, 20, 0.1);
+        }
+        
+        #gameCanvas {
+            border: 2px solid var(--neon-blue);
+            background: #050818;
+            box-shadow: 
+                0 0 30px rgba(0, 240, 255, 0.3),
+                inset 0 0 30px rgba(0, 240, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .score-display {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink);
+            padding: 15px 30px;
+            background: rgba(255, 16, 240, 0.1);
+            border: 2px solid var(--neon-pink);
+            border-radius: 10px;
+            min-width: 200px;
+        }
+        
+        .best-score {
+            font-size: 1.2rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            padding: 10px 20px;
+            background: rgba(0, 240, 255, 0.1);
+            border: 2px solid var(--neon-blue);
+            border-radius: 10px;
+        }
+        
+        .btn {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 15px 35px;
+            border: 2px solid var(--neon-green);
+            background: transparent;
+            color: var(--neon-green);
+            cursor: pointer;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.3);
+        }
+        
+        .btn:hover {
+            background: var(--neon-green);
+            color: #0a0e27;
+            box-shadow: 0 0 30px var(--neon-green);
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn:disabled:hover {
+            background: transparent;
+            transform: none;
+        }
+        
+        .btn.pause {
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+        
+        .btn.pause:hover {
+            background: var(--neon-blue);
+            color: #0a0e27;
+            box-shadow: 0 0 30px var(--neon-blue);
+        }
+        
+        .btn.danger {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+            box-shadow: 0 0 15px rgba(255, 16, 240, 0.3);
+            font-size: 0.9rem;
+            padding: 10px 20px;
+        }
+        
+        .btn.danger:hover {
+            background: var(--neon-pink);
+            color: #0a0e27;
+            box-shadow: 0 0 30px var(--neon-pink);
+        }
+        
+        .high-scores {
+            margin-top: 40px;
+            padding: 25px;
+            background: rgba(10, 14, 39, 0.8);
+            border: 2px solid var(--neon-pink);
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 16, 240, 0.3);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .high-scores h2 {
+            font-size: 2rem;
+            color: var(--neon-pink);
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px var(--neon-pink);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .score-list {
+            list-style: none;
+        }
+        
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 20px;
+            margin: 8px 0;
+            background: rgba(255, 16, 240, 0.05);
+            border: 1px solid rgba(255, 16, 240, 0.3);
+            border-radius: 8px;
+            font-family: 'Courier Prime', monospace;
+            transition: all 0.3s ease;
+        }
+        
+        .score-item:hover {
+            background: rgba(255, 16, 240, 0.15);
+            border-color: var(--neon-pink);
+            transform: translateX(5px);
+        }
+        
+        .score-rank {
+            color: var(--neon-blue);
+            font-weight: 700;
+            margin-right: 15px;
+        }
+        
+        .score-name {
+            color: var(--neon-green);
+            flex-grow: 1;
+            text-align: left;
+        }
+        
+        .score-points {
+            color: var(--neon-pink);
+            font-weight: 700;
+        }
+        
+        .game-over-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid var(--neon-pink);
+            box-shadow: 0 0 40px var(--neon-pink);
+            text-align: center;
+            max-width: 500px;
+        }
+        
+        .modal-content h2 {
+            font-size: 3rem;
+            color: var(--neon-pink);
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px var(--neon-pink);
+        }
+        
+        .modal-content input {
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.2rem;
+            padding: 15px;
+            margin: 20px 0;
+            background: rgba(255, 16, 240, 0.1);
+            border: 2px solid var(--neon-pink);
+            border-radius: 10px;
+            color: var(--neon-green);
+            width: 100%;
+            text-align: center;
+        }
+        
+        .modal-content input:focus {
+            outline: none;
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+                letter-spacing: 4px;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SNAKE</h1>
+        <div class="subtitle">[ Retro Neon Edition ]</div>
+        
+        <div class="game-wrapper">
+            <canvas id="gameCanvas" width="600" height="600"></canvas>
+        </div>
+        
+        <div class="controls">
+            <div class="score-display">
+                Score: <span id="score">0</span>
+            </div>
+            <div class="best-score">
+                Best: <span id="bestScore">0</span>
+            </div>
+            <button class="btn" id="startBtn">Boshlash</button>
+            <button class="btn pause" id="pauseBtn">Pauza</button>
+        </div>
+        
+        <div class="high-scores">
+            <h2>
+                <span>🏆 Top 10</span>
+                <button class="btn danger" id="clearBtn">Tozalash</button>
+            </h2>
+            <ul class="score-list" id="scoreList">
+                <li class="score-item">
+                    <span class="score-rank">#</span>
+                    <span class="score-name">Hali rekordlar yo'q</span>
+                    <span class="score-points">-</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="game-over-modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>O'YIN TUGADI!</h2>
+            <p style="font-size: 1.5rem; color: var(--neon-green); margin: 20px 0;">
+                Sizning balingiz: <span id="finalScore">0</span>
+            </p>
+            <input type="text" id="playerName" placeholder="Ismingizni kiriting" maxlength="20">
+            <button class="btn" onclick="saveScore()">Saqlash</button>
+            <button class="btn pause" onclick="closeModal()">Yopish</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
